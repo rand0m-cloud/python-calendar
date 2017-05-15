@@ -75,8 +75,10 @@ def schedule_day(googleEvents, tasksToSchedule, date, calendarID):
 
     while nextTask < len(tasksToSchedule):
         sceduled = False
+
         for event in googleEvents:
             timeToCheck = (datetime.datetime.combine(date, time)+ datetime.timedelta(minutes=tasksToSchedule[nextTask].length))
+
             if  timeToCheck < event.start.replace(tzinfo=timeToCheck.tzinfo):
                 tasksToSchedule[nextTask].schedule(date, time, calendarID)
                 nextTask+=1
@@ -84,15 +86,17 @@ def schedule_day(googleEvents, tasksToSchedule, date, calendarID):
                 break
             else:
                 time = event.end.time()
+
         if not sceduled:
             return -1
 
+        if time > datetime.time(hour=23):
+            return 1
     return 0
 
 
 
 def main():
-
     calendarID = select_calendar()
 
     events = get_events(calendarID)

@@ -68,3 +68,11 @@ def getInputFromList(list,names):
             pass
 
     return list[index-1]
+
+def getYesNo(prompt):
+    input = ""
+    while not input.startswith('y') and not input.startswith('n'):
+        input = str(raw_input(prompt + ' '))
+    if input.startswith('y'):
+        return True
+    return False
