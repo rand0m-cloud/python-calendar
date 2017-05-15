@@ -16,7 +16,8 @@ import datetime,arrow
 def get_events(calendar_id,minTime=None,maxTime=None):
     if minTime == None:
         minTime = datetime.datetime.utcnow().isoformat() + 'Z' # NOW!!!!
-    results = apiHandler.google.service.events().list(calendarId=calendar_id,timeMin=minTime,timeMax=maxTime).execute()
+    #should set max Time default
+    results = apiHandler.google.service.events().list(calendarId=calendar_id,timeMin=minTime,timeMax=maxTime, orderBy="startTime", singleEvents=True).execute()
     return results["items"]
 
 def select_calendar():
@@ -59,13 +60,31 @@ def parse_tasks(listOfTasks):
 
     return tasksToSchedule
 
-def translate_events(googleEvents):
-    newEvents = []
+#TODO add a method for ordering tasks
+def order_tasks(listOfTasks):
+    pass
 
-    for event in googleEvents:
-        newEvents.append(googleEvent(event))
+def schedule_day(googleEvents, tasksToSchedule, date, calendarID):
+    time = datetime.time(8)
+    nextTask = 0
 
-    return newEvents
+    while nextTask < len(tasksToSchedule):
+        sceduled = False
+        for event in googleEvents:
+            timeToCheck = (datetime.datetime.combine(date, time)+ datetime.timedelta(minutes=tasksToSchedule[nextTask].length))
+            if  timeToCheck < event.start.replace(tzinfo=timeToCheck.tzinfo):
+                tasksToSchedule[nextTask].schedule(date, time, calendarID)
+                nextTask+=1
+                sceduled = True
+                break
+            else:
+                time = event.end.time()
+        if not sceduled:
+            return -1
+
+    return 0
+
+
 
 def main():
 
@@ -82,6 +101,7 @@ def main():
         cleanEvents.append(calEvent)
         print calEvent
 
+
     listID = select_list()
 
     listOfTasks = get_tasks(listID)
@@ -90,6 +110,8 @@ def main():
 
     for task in taskToSchedule:
         print task
+
+    schedule_day(cleanEvents, taskToSchedule, datetime.date.today()+datetime.timedelta(days=1), calendarID)
 
 
 if __name__ == '__main__':

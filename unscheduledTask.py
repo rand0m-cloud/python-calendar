@@ -4,15 +4,13 @@ from apiHandler import *
 import dateutil.parser
 
 class unscheduledTask:
-
-
-
     def __init__(self,title, length, setUp=0):
         self.title = title
         self.length = length
         self.setUp = setUp
 
-    def schedule(self, startTime, calendarID):
+    def schedule(self, date, time, calendarID):
+        startTime = datetime.datetime.combine(date, time)
         startTimeString = startTime.strftime("%Y-%m-%dT%H:%M:%S-04:00")
         endTime = startTime+datetime.timedelta(minutes=self.length)
 
