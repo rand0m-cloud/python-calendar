@@ -24,12 +24,6 @@ class wunder:
             }
             wunderaccess.write(json.dumps(obj))
 
-        self.headers = {
-            "X-Access-Token":self.token,
-            "X-Client-ID":self.oauth["client_id"]
-        }
-
-
     def __init__(self):
         with open("wunderoauth.json", "r") as wunderoauth:
             self.oauth = json.load(wunderoauth)
@@ -45,23 +39,28 @@ class wunder:
             "X-Client-ID": self.oauth["client_id"]
         }
 
+        self.headers2 = {
+            "X-Access-Token": self.token,
+            "X-Client-ID": self.oauth["client_id"],
+            "Content-Type":"text/json"
+        }
 
     def request(self,method,url,data=None):
         request = None
 
-        if method == "GET":
+        if method == "GET" or method == "DELETE":
             request = requests.request(method,url,params=data,headers=self.headers)
         else:
-            request = requests.request(method,url,data=data,headers=self.headers)
+            request = requests.request(method,url, data=json.dumps(data),headers=self.headers2)
 
         return self.handleResponse(request)
 
 
     def handleResponse(self,req):
-        if req.status_code != 200:
+        if req.status_code != 200 and req.status_code != 204:
             self.genCreds()
             print "Request returned:{}".format(req.status_code)
-            raise RuntimeError("Request:{},{},{}",req.url,req.headers,req.text)
+            raise RuntimeError(req.url,req.text,req.headers)
             return None
 
         jsonObj = json.loads(req.text)

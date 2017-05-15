@@ -49,7 +49,9 @@ def get_tasks(listID):
 
 #TODO create a method for changing the title of the tasks and pushing this to wunderlist
 def change_task_name(task, title):
-    pass
+    #apiHandler.wunder.request("DELETE", "https://a.wunderlist.com/api/v1/tasks/" + str(task["id"]), data={"revision": 1})
+    apiHandler.wunder.request("PATCH", "https://a.wunderlist.com/api/v1/tasks/" + str(task["id"]),data={"revision":1, "title":title})
+
 
 def parse_tasks(listOfTasks):
     tasksToSchedule = []
