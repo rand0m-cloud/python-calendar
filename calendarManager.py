@@ -47,6 +47,10 @@ def select_list():
 def get_tasks(listID):
     return apiHandler.wunder.request("GET","http://a.wunderlist.com/api/v1/tasks",data={ "list_id":listID })
 
+#TODO create a method for changing the title of the tasks and pushing this to wunderlist
+def change_task_name(task, title):
+    pass
+
 def parse_tasks(listOfTasks):
     tasksToSchedule = []
 
@@ -56,6 +60,7 @@ def parse_tasks(listOfTasks):
         title = task["title"].split('#')
         if len(title) == 1:
             continue
+        change_task_name(task, title[0])
         tasksToSchedule.append(unscheduledTask(title[0].strip(), int(title[1])))
 
     return tasksToSchedule
