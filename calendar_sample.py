@@ -13,86 +13,73 @@ from oauth2client.file import Storage
 
 import datetime,arrow
 
-try:
-    import argparse
-    flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
-except ImportError:
-    flags = None
-
-# If modifying these scopes, delete your previously saved credentials
-# at ~/.credentials/calendar-python-quickstart.json
-SCOPES = 'https://www.googleapis.com/auth/calendar'
-CLIENT_SECRET_FILE = 'client_secrets.json'
-APPLICATION_NAME = 'Google Calendar API Python Quickstart'
-global calendarID
-global API
 def get_events(calendar_id,minTime=None,maxTime=None):
     if minTime == None:
         minTime = datetime.datetime.utcnow().isoformat() + 'Z' # NOW!!!!
-    results = get_service().events().list(calendarId=calendar_id,timeMin=minTime,timeMax=maxTime).execute()
+    results = apiHandler.google.service.events().list(calendarId=calendar_id,timeMin=minTime,timeMax=maxTime).execute()
     return results["items"]
 
-def main():
-    """Shows basic usage of the Google Calendar API.
-
-    Creates a Google Calendar API service object and outputs a list of the next
-    10 events on the user's calendar.
-    """
-    #service = get_service()
-
-    service = apiHandler.google.service
-    page_token = None
-
-    calendars = []
+def select_calendar():
     calendarsNames = []
-    while True:
-        calendar_list = service.calendarList().list(pageToken=page_token).execute()
-        for calendar_list_entry in calendar_list['items']:
-            calendarsNames.append(calendar_list_entry['summary'])
-            calendars.append(calendar_list_entry)
+    calendars = []
 
-        page_token = calendar_list.get('nextPageToken')
-        if not page_token:
-            break
+    calendar_list = apiHandler.google.service.calendarList().list().execute()
 
-    selectedCalendar = getInputFromList(calendars,calendarsNames)
-    calendarID = selectedCalendar["id"]
-    set_calendarID(calendarID)
-    events = get_events(calendarID)
+    for calendar_list_entry in calendar_list['items']:
+        calendarsNames.append(calendar_list_entry['summary'])
+        calendars.append(calendar_list_entry)
 
+    selectedCalendar = getInputFromList(calendars, calendarsNames)
+    return selectedCalendar["id"]
 
-    for event in events:
-
-        if event["start"].has_key("dateTime")==False:
-                continue
-
-
-
-        calEvent = calendarEvent(event)
-        print calEvent
-
-    #testEvent = UnscheduledTask("Potato", length=15, setUp=5)
-    #testEvent.schedule(datetime.datetime.now())
-
-
+def select_list():
+    listNames = []
 
     listOfLists = apiHandler.wunder.request("GET","http://a.wunderlist.com/api/v1/lists")
-    i=1
-    listNames = []
+
     for list in listOfLists:
         listNames.append(list["title"])
+
     list = getInputFromList(listOfLists,listNames)
-    print "{}:{}".format(list["title"],list["id"])
-    listOfTasks = apiHandler.wunder.request("GET","http://a.wunderlist.com/api/v1/tasks",data={
-        "list_id":list["id"]
-    })
+    return list["id"]
+
+def get_tasks(listID):
+    return apiHandler.wunder.request("GET","http://a.wunderlist.com/api/v1/tasks",data={ "list_id":listID })
+
+def parse_tasks(listOfTasks):
+    tasksToSchedule = []
 
     for task in listOfTasks:
 
         print task
         title = task["title"].split('#')
-        newEvent = UnscheduledTask(title[0], int(title[1]))
-        newEvent.schedule(datetime.datetime.now())
+        if len(title) == 1:
+            continue
+        tasksToSchedule.append(UnscheduledTask(title[0].strip(), int(title[1])))
+
+    return tasksToSchedule
+
+def main():
+
+    calendarID = select_calendar()
+
+    events = get_events(calendarID)
+
+    for event in events:
+        if event["start"].has_key("dateTime")==False:
+                continue
+        calEvent = calendarEvent(event)
+        print calEvent
+
+    listID = select_list()
+
+    listOfTasks = get_tasks(listID)
+
+    taskToSchedule = parse_tasks(listOfTasks)
+
+    for task in taskToSchedule:
+        print task
+
 
 if __name__ == '__main__':
     main()

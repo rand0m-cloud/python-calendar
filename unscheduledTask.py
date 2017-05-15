@@ -8,13 +8,11 @@ class UnscheduledTask:
 
 
     def __init__(self,title, length, setUp=0):
-
-        self.service = apiHandler.google.service
         self.title = title
         self.length = length
         self.setUp = setUp
 
-    def schedule(self, startTime):
+    def schedule(self, startTime, calendarID):
         startTimeString = startTime.strftime("%Y-%m-%dT%H:%M:%S-04:00")
         endTime = startTime+datetime.timedelta(minutes=self.length)
 
@@ -37,7 +35,9 @@ class UnscheduledTask:
                 ],
             },
         }
-        calendarID = get_calendarID()
-        print event
 
-        event = self.service.events().insert(calendarId=calendarID, body=event).execute()
+        print event
+        apiHandler.google.service.events().insert(calendarId=calendarID, body=event).execute()
+
+    def __str__(self):
+        return "Name: {}, Length: {}".format(self.title, self.length)
