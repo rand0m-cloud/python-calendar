@@ -1,6 +1,6 @@
 from utils import *
 from server import *
-from calendarEvent import calendarEvent
+from googleEvent import googleEvent
 import httplib2
 import os
 import requests
@@ -55,9 +55,17 @@ def parse_tasks(listOfTasks):
         title = task["title"].split('#')
         if len(title) == 1:
             continue
-        tasksToSchedule.append(UnscheduledTask(title[0].strip(), int(title[1])))
+        tasksToSchedule.append(unscheduledTask(title[0].strip(), int(title[1])))
 
     return tasksToSchedule
+
+def translate_events(googleEvents):
+    newEvents = []
+
+    for event in googleEvents:
+        newEvents.append(googleEvent(event))
+
+    return newEvents
 
 def main():
 
@@ -65,10 +73,13 @@ def main():
 
     events = get_events(calendarID)
 
+    cleanEvents = [] #exclude all day events
+
     for event in events:
         if event["start"].has_key("dateTime")==False:
                 continue
-        calEvent = calendarEvent(event)
+        calEvent = googleEvent(event)
+        cleanEvents.append(calEvent)
         print calEvent
 
     listID = select_list()

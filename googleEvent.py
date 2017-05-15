@@ -1,6 +1,6 @@
 from utils import *
 import datetime
-class calendarEvent:
+class googleEvent:
     def __init__(self,event):
         self.event = event
         self.start = utc_to_datetime(event["start"]["dateTime"])
