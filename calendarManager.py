@@ -85,32 +85,55 @@ def parse_tasks(listOfTasks):
 def order_tasks(listOfTasks):
     return listOfTasks.sort(key=lambda r: r["DueDate"])
 
+def tryToSchedule(nextTask, tasksToSchedule, date, time, event, calendarID):
+    while nextTask < len(tasksToSchedule):
+        timeToCheck = datetime.datetime.combine(date, time)
+        timeToCheck += datetime.timedelta(minutes=tasksToSchedule[nextTask].length + tasksToSchedule[nextTask].setUp)
+        if timeToCheck > event.start.replace(tzinfo=timeToCheck.tzinfo):
+            return [time, nextTask]
+        # there should be enough space for our event here
+        tasksToSchedule[nextTask].schedule(date, time, calendarID)
+        time = timeToCheck.time()
+        nextTask += 1 #FIXME U SUCK
+    return [23, nextTask]
+
 def schedule_day(googleEvents, tasksToSchedule, date, calendarID):
     time = datetime.time(8)
     nextTask = 0
 
-    while nextTask < len(tasksToSchedule):
-        sceduled = False
+    timeToCheck = datetime.datetime.combine(date, time)
 
-        for event in googleEvents:
-            timeToCheck = (datetime.datetime.combine(date, time)+ datetime.timedelta(minutes=tasksToSchedule[nextTask].length))
-
-            if  timeToCheck < event.start.replace(tzinfo=timeToCheck.tzinfo):
-                tasksToSchedule[nextTask].schedule(date, time, calendarID)
-                timeToCheck+=datetime.timedelta(minutes=tasksToSchedule[nextTask].length+tasksToSchedule[nextTask].setUp)
-                time = timeToCheck.time()
-                nextTask+=1
-                sceduled = True
-                break
-            else:
+    for event in googleEvents:
+        if event.start.replace(tzinfo=timeToCheck.tzinfo) < datetime.datetime.combine(date,time):
+            if event.end.replace(tzinfo=timeToCheck.tzinfo) > datetime.datetime.combine(date, time):
                 time = event.end.time()
+            continue
+        #Event here should be next event after time being checked
+        [time, nextTask] = tryToSchedule(nextTask, tasksToSchedule, date, time, event, calendarID)
+        time = event.end.time()
 
-        if not sceduled:
-            return -1
+   # while nextTask < len(tasksToSchedule):
+     #   sceduled = False
 
-        if time > datetime.time(hour=23):
-            return 1
-    return 0
+       # for event in googleEvents:
+         #   timeToCheck = (datetime.datetime.combine(date, time)+ datetime.timedelta(minutes=tasksToSchedule[nextTask].length))
+
+        #    if  timeToCheck < event.start.replace(tzinfo=timeToCheck.tzinfo):
+       #         tasksToSchedule[nextTask].schedule(date, time, calendarID)
+      #         # timeToCheck+=datetime.timedelta(minutes=tasksToSchedule[nextTask].length+tasksToSchedule[nextTask].setUp)
+     #           time = timeToCheck.time()
+    #            nextTask+=1
+   #             sceduled = True
+  #              break
+ #           else:
+#                time = event.end.time()
+
+ #       if not sceduled:
+#            return -1
+
+      #  if time > datetime.time(hour=23):
+     #       return 1
+    #return 0
 
 
 
