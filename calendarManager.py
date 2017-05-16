@@ -47,9 +47,7 @@ def select_list():
 def get_tasks(listID):
     return apiHandler.wunder.request("GET","http://a.wunderlist.com/api/v1/tasks",data={ "list_id":listID })
 
-#TODO create a method for changing the title of the tasks and pushing this to wunderlist
 def change_task_name(task, title):
-    #apiHandler.wunder.request("DELETE", "https://a.wunderlist.com/api/v1/tasks/" + str(task["id"]), data={"revision": 1})
     apiHandler.wunder.request("PATCH", "https://a.wunderlist.com/api/v1/tasks/" + str(task["id"]),data={"revision":task["revision"], "title":title})
 
 
@@ -63,8 +61,25 @@ def parse_tasks(listOfTasks):
         if len(title) == 1:
             continue
         change_task_name(task, title[0])
-        tasksToSchedule.append(unscheduledTask(title[0].strip(), int(title[1])))
-
+        # number - length, s-number of segements, r-repeat frequency, p-preparation time
+        length = 0
+        repeatsFreq = 0 #TODO Add me
+        segments = 1
+        prep = 0
+        for bit in title:
+            bit = bit.strip()
+            if bit.isdigit():
+                length = int(bit)
+            if bit.startswith("s"):
+                segments = int(bit[1:])
+            if bit.startswith("r"):
+                repeatsFreq = int(bit[1:])
+            if bit.startswith("p"):
+                prep = int(bit[1:])
+        length /= segments
+        while segments>0:
+            tasksToSchedule.append(unscheduledTask(title[0].strip(), length, setUp=prep))
+            segments-=1
     return tasksToSchedule
 
 def order_tasks(listOfTasks):
@@ -82,6 +97,8 @@ def schedule_day(googleEvents, tasksToSchedule, date, calendarID):
 
             if  timeToCheck < event.start.replace(tzinfo=timeToCheck.tzinfo):
                 tasksToSchedule[nextTask].schedule(date, time, calendarID)
+                timeToCheck+=datetime.timedelta(minutes=tasksToSchedule[nextTask].length+tasksToSchedule[nextTask].setUp)
+                time = timeToCheck.time()
                 nextTask+=1
                 sceduled = True
                 break

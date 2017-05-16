@@ -11,7 +11,7 @@ class unscheduledTask:
 
     def schedule(self, date, time, calendarID):
         startTime = datetime.datetime.combine(date, time)
-        startTimeString = startTime.strftime("%Y-%m-%dT%H:%M:%S-04:00")
+        startTimeString = startTime.strftime("%Y-%m-%dT%H:%M:%S-04:00") #FIXME Actually set the correct timezone with daylight savings
         endTime = startTime+datetime.timedelta(minutes=self.length)
 
         endTimeString = endTime.strftime("%Y-%m-%dT%H:%M:%S-04:00")
