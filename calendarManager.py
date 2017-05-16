@@ -67,9 +67,8 @@ def parse_tasks(listOfTasks):
 
     return tasksToSchedule
 
-#TODO add a method for ordering tasks
 def order_tasks(listOfTasks):
-    pass
+    return listOfTasks.sort(key=lambda r: r["DueDate"])
 
 def schedule_day(googleEvents, tasksToSchedule, date, calendarID):
     time = datetime.time(8)
