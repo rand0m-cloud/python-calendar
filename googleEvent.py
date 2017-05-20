@@ -8,6 +8,7 @@ class googleEvent:
         self.duration = self.end-self.start
         if not event["reminders"]["useDefault"]:
             self.start -= datetime.timedelta(minutes=event["reminders"]["overrides"][0]["minutes"])
+            self.end += datetime.timedelta(minutes=event["reminders"]["overrides"][0]["minutes"])
 
     def __str__(self):
         string = "eventName:{}, start:{}, end:{}, duration:{}".format(self.event["summary"],\

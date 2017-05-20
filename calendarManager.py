@@ -15,8 +15,14 @@ import datetime,arrow
 
 def get_events(calendar_id,minTime=None,maxTime=None):
     if minTime == None:
-        minTime = datetime.datetime.utcnow().isoformat() + 'Z' # NOW!!!!
+        minTime = datetime.datetime.utcnow() # NOW!!!!
+        tommorow = (minTime + datetime.timedelta(days=1)).date()
+        minTime = datetime.datetime.combine(tommorow, datetime.time(hour=8))
+        minTime = minTime.isoformat() + 'Z'
     #should set max Time default
+    if maxTime == None:
+        temp = datetime.datetime.utcnow()+datetime.timedelta(days=1)
+        maxTime = temp.isoformat() + 'Z'
     results = apiHandler.google.service.events().list(calendarId=calendar_id,timeMin=minTime,timeMax=maxTime, orderBy="startTime", singleEvents=True).execute()
     return results["items"]
 
@@ -63,6 +69,7 @@ def parse_tasks(listOfTasks):
         change_task_name(task, title[0])
         # number - length, s-number of segements, r-repeat frequency, p-preparation time
         length = 0
+        fun = 0
         repeatsFreq = 0 #TODO Add me
         segments = 1
         prep = 0
@@ -76,14 +83,36 @@ def parse_tasks(listOfTasks):
                 repeatsFreq = int(bit[1:])
             if bit.startswith("p"):
                 prep = int(bit[1:])
+            if bit.startswith("i"):
+                fun = int(bit[1:])
         length /= segments
         while segments>0:
-            tasksToSchedule.append(unscheduledTask(title[0].strip(), length, setUp=prep))
+            tasksToSchedule.append(unscheduledTask(title[0].strip(), length, fun, setUp=prep))
             segments-=1
     return tasksToSchedule
 
 def order_tasks(listOfTasks):
-    return listOfTasks.sort(key=lambda r: r["DueDate"])
+    orderedTasks = []
+    net = 0
+    length = 0
+    for task in listOfTasks:
+        net += task.weight
+        length += task.lengthInHours
+    slope = net/length
+    time = 0
+    weight = 0
+    tasksLeft = len(listOfTasks)
+    while tasksLeft > 0:
+        resultDelta = []
+        for task in listOfTasks:
+            resultDelta.append(abs(weight+task.weight-(time+task.lengthInHours)*slope))
+        choice = resultDelta.index(min(resultDelta))
+        time += listOfTasks[choice].lengthInHours
+        weight += listOfTasks[choice].weight
+        orderedTasks.append(listOfTasks[choice])
+        listOfTasks.pop(choice)
+        tasksLeft-=1
+    return orderedTasks
 
 def tryToSchedule(nextTask, tasksToSchedule, date, time, event, calendarID):
     while nextTask < len(tasksToSchedule):
@@ -97,44 +126,29 @@ def tryToSchedule(nextTask, tasksToSchedule, date, time, event, calendarID):
         nextTask += 1 #FIXME U SUCK
     return [23, nextTask]
 
+
+#TODO add break scheduling
+def scheduleBlock(timespan, startTime, tasksToSchedule, calendarID):
+    while len(tasksToSchedule) > 0:
+        if datetime.timedelta(minutes=tasksToSchedule[0].length+tasksToSchedule[0].setUp*2) < timespan:
+            tasksToSchedule[0].schedule(startTime.date(), (startTime+datetime.timedelta(minutes=tasksToSchedule[0].setUp)).time(), calendarID)
+            timespan -= datetime.timedelta(minutes=tasksToSchedule[0].length+tasksToSchedule[0].setUp*2)
+            startTime += datetime.timedelta(minutes=tasksToSchedule[0].length+tasksToSchedule[0].setUp*2)
+            tasksToSchedule.pop(0)
+        else:
+            #schedule breaks here
+            return
+
+
+
 def schedule_day(googleEvents, tasksToSchedule, date, calendarID):
-    time = datetime.time(8)
-    nextTask = 0
-
-    timeToCheck = datetime.datetime.combine(date, time)
-
-    for event in googleEvents:
-        if event.start.replace(tzinfo=timeToCheck.tzinfo) < datetime.datetime.combine(date,time):
-            if event.end.replace(tzinfo=timeToCheck.tzinfo) > datetime.datetime.combine(date, time):
-                time = event.end.time()
-            continue
-        #Event here should be next event after time being checked
-        [time, nextTask] = tryToSchedule(nextTask, tasksToSchedule, date, time, event, calendarID)
-        time = event.end.time()
-
-   # while nextTask < len(tasksToSchedule):
-     #   sceduled = False
-
-       # for event in googleEvents:
-         #   timeToCheck = (datetime.datetime.combine(date, time)+ datetime.timedelta(minutes=tasksToSchedule[nextTask].length))
-
-        #    if  timeToCheck < event.start.replace(tzinfo=timeToCheck.tzinfo):
-       #         tasksToSchedule[nextTask].schedule(date, time, calendarID)
-      #         # timeToCheck+=datetime.timedelta(minutes=tasksToSchedule[nextTask].length+tasksToSchedule[nextTask].setUp)
-     #           time = timeToCheck.time()
-    #            nextTask+=1
-   #             sceduled = True
-  #              break
- #           else:
-#                time = event.end.time()
-
- #       if not sceduled:
-#            return -1
-
-      #  if time > datetime.time(hour=23):
-     #       return 1
-    #return 0
-
+    startTime = datetime.datetime.combine(date, datetime.time(hour=8))
+    i = 0
+    while i < len(googleEvents)-1:
+        nextBlock = googleEvents[i+1].start - googleEvents[i].end
+        if(nextBlock > datetime.timedelta(minutes=tasksToSchedule[0].length+tasksToSchedule[0].setUp*2)):
+            scheduleBlock(nextBlock, googleEvents[i].end, tasksToSchedule, calendarID)
+        i += 1
 
 
 def main():
@@ -157,6 +171,8 @@ def main():
     listOfTasks = get_tasks(listID)
 
     taskToSchedule = parse_tasks(listOfTasks)
+
+    taskToSchedule = order_tasks(taskToSchedule)
 
     for task in taskToSchedule:
         print task

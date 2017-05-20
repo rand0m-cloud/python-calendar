@@ -4,10 +4,13 @@ from apiHandler import *
 import dateutil.parser
 
 class unscheduledTask:
-    def __init__(self,title, length, setUp=0):
+    def __init__(self,title, length, fun, setUp=0):
         self.title = title
         self.length = length
+        self.lengthInHours = length/60.0
+        self.fun = fun
         self.setUp = setUp
+        self.weight = fun*length
 
     def schedule(self, date, time, calendarID):
         startTime = datetime.datetime.combine(date, time)
