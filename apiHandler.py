@@ -1,6 +1,11 @@
+import datetime
+
 from utils import *
 from server import getWunderAccess
 import requests
+
+from utils import getInputFromList
+
 
 class google:
 
@@ -70,3 +75,51 @@ class wunder:
 class apiHandler:
     google = google()
     wunder = wunder()
+
+
+def get_events(calendar_id,minTime=None,maxTime=None):
+    if minTime == None:
+        minTime = datetime.datetime.utcnow() # NOW!!!!
+        tommorow = (minTime + datetime.timedelta(days=1)).date()
+        minTime = datetime.datetime.combine(tommorow, datetime.time(hour=8))
+        minTime = minTime.isoformat() + 'Z'
+    #should set max Time default
+    if maxTime == None:
+        temp = datetime.datetime.combine(tommorow, datetime.time(hour=23))
+        maxTime = temp.isoformat() + 'Z'
+    results = apiHandler.google.service.events().list(calendarId=calendar_id,timeMin=minTime,timeMax=maxTime, orderBy="startTime", singleEvents=True).execute()
+    return results["items"]
+
+
+def select_calendar():
+    calendarsNames = []
+    calendars = []
+
+    calendar_list = apiHandler.google.service.calendarList().list().execute()
+
+    for calendar_list_entry in calendar_list['items']:
+        calendarsNames.append(calendar_list_entry['summary'])
+        calendars.append(calendar_list_entry)
+
+    selectedCalendar = getInputFromList(calendars, calendarsNames)
+    return selectedCalendar["id"]
+
+
+def select_list():
+    listNames = []
+
+    listOfLists = apiHandler.wunder.request("GET","http://a.wunderlist.com/api/v1/lists")
+
+    for list in listOfLists:
+        listNames.append(list["title"])
+
+    list = getInputFromList(listOfLists,listNames)
+    return list["id"]
+
+
+def get_tasks(listID):
+    return apiHandler.wunder.request("GET","http://a.wunderlist.com/api/v1/tasks",data={ "list_id":listID })
+
+
+def change_task_name(task, title):
+    apiHandler.wunder.request("PATCH", "https://a.wunderlist.com/api/v1/tasks/" + str(task["id"]),data={"revision":task["revision"], "title":title})
