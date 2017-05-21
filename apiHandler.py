@@ -80,14 +80,15 @@ class apiHandler:
 def get_events(calendar_id,minTime=None,maxTime=None):
     if minTime == None:
         minTime = datetime.datetime.utcnow() # NOW!!!!
-        tommorow = (minTime + datetime.timedelta(days=1)).date()
+        tommorow = (minTime + datetime.timedelta(days=0)).date()
         minTime = datetime.datetime.combine(tommorow, datetime.time(hour=8))
         minTime = minTime.isoformat() + 'Z'
     #should set max Time default
     if maxTime == None:
         temp = datetime.datetime.combine(tommorow, datetime.time(hour=23))
         maxTime = temp.isoformat() + 'Z'
-    results = apiHandler.google.service.events().list(calendarId=calendar_id,timeMin=minTime,timeMax=maxTime, orderBy="startTime", singleEvents=True).execute()
+    #FIXME add back in maxTime
+    results = apiHandler.google.service.events().list(calendarId=calendar_id,timeMin=minTime, orderBy="startTime", singleEvents=True).execute()
     return results["items"]
 
 
