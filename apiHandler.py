@@ -91,6 +91,8 @@ def get_events(calendar_id,minTime=None,maxTime=None):
     results = apiHandler.google.service.events().list(calendarId=calendar_id,timeMin=minTime, orderBy="startTime", singleEvents=True).execute()
     return results["items"]
 
+def getCalendars():
+    return apiHandler.google.service.calendarList().list().execute()
 
 def select_calendar():
     calendarsNames = []

@@ -1,10 +1,11 @@
 from googleEvent import googleEvent
 from unscheduledTask import *
+from schedulerGUI import *
+from Tkinter import *
 
 
 def parse_tasks(listOfTasks):
     tasksToSchedule = []
-
     for task in listOfTasks:
 
         print task
@@ -74,7 +75,6 @@ def scheduleBlock(timespan, startTime, tasksToSchedule, calendarID):
 
 
 def schedule_day(googleEvents, tasksToSchedule, date, calendarID):
-    startTime = datetime.datetime.combine(date, datetime.time(hour=8))
     i = 0
     while i < len(googleEvents)-1 and len(tasksToSchedule) != 0:
         nextBlock = googleEvents[i+1].start - googleEvents[i].end
@@ -82,9 +82,14 @@ def schedule_day(googleEvents, tasksToSchedule, date, calendarID):
             scheduleBlock(nextBlock, googleEvents[i].end, tasksToSchedule, calendarID)
         i += 1
 
+def changeCalendarID(event):
+    lb = event.widget
+    index = int(lb.curselection()[0])
+    value = lb.get(index)
+    global calendarID
+    calendarID = value
 
-def main():
-    calendarID = select_calendar()
+def oldmain():
 
     events = get_events(calendarID)
 
@@ -111,6 +116,8 @@ def main():
 
     schedule_day(cleanEvents, taskToSchedule, datetime.date.today()+datetime.timedelta(days=1), calendarID)
 
+def main():
+    gui = GUI()
 
 if __name__ == '__main__':
     main()

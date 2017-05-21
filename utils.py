@@ -11,8 +11,6 @@ import os
 def utc_to_datetime(timestamp):
     return arrow.get(timestamp).datetime
 
-calendarID = None
-listID = None
 
 def get_credentials():
     try:
