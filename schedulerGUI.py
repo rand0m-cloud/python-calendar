@@ -2,10 +2,17 @@ from googleEvent import googleEvent
 from unscheduledTask import *
 from calendarManager import *
 from Tkinter import *
+from googleAPI import *
+from wunderAPI import *
 
 class GUI:
+
+
     def __init__(self):
-        self.calendarID = "primary"
+
+        self.google = google()
+        self.wunder = wunder()
+
 
         root = Tk()
 
@@ -14,10 +21,12 @@ class GUI:
         ActionFrame = Frame(root)
 
         GoogleCalendarOptions = Listbox(GoogleFrame, selectmode=SINGLE)
-        for event in getCalendars()["items"]:
+        for event in self.google.getCalendars()["items"]:
             GoogleCalendarOptions.insert(END, event["summary"])
+
         GoogleCalendarOptions.select_set(0)
-        GoogleCalendarOptions.bind('<<ListboxSelect>>', changeCalendarID)
+
+        GoogleCalendarOptions.bind('<<ListboxSelect>>', self.changeCalendarID)
         GoogleCalendarOptions.pack(side=TOP)
 
         GoogleFrame.pack(side=LEFT)
@@ -25,3 +34,11 @@ class GUI:
         ActionFrame.pack(side=LEFT)
 
         root.mainloop()
+
+    def changeCalendarID(self, event):
+        lb = event.widget
+        index = int(lb.curselection()[0])
+        value = lb.get(index)
+        print value
+        self.google.setCalendarID(value)
+
