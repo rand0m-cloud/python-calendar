@@ -9,6 +9,8 @@ from utils import getInputFromList
 
 class wunder:
 
+    
+
     def genCreds(self):
         if os.path.isfile("wunderaccess.json"):
             os.remove("wunderaccess.json")
@@ -22,6 +24,8 @@ class wunder:
             wunderaccess.write(json.dumps(obj))
 
     def __init__(self):
+        self.listID = ""
+        self.lists = None
         with open("wunderoauth.json", "r") as wunderoauth:
             self.oauth = json.load(wunderoauth)
 
@@ -67,13 +71,26 @@ class wunder:
     def select_list(self):
         listNames = []
 
-        listOfLists = apiHandler.wunder.request("GET","http://a.wunderlist.com/api/v1/lists")
+        listOfLists = getLists()
 
         for list in listOfLists:
             listNames.append(list["title"])
 
         list = getInputFromList(listOfLists,listNames)
         return list["id"]
+
+    def getLists(self):
+        if self.lists == None:
+            self.lists = self.request("GET","http://a.wunderlist.com/api/v1/lists")
+        return self.lists
+
+
+    def setListID(self, newListTitle):
+        lists = self.getLists()
+        for item in lists:
+            if item["title"] == newListTitle:
+                print item["id"]
+                self.listID = item["id"]
 
     def get_tasks(self, listID):
         return request("GET","http://a.wunderlist.com/api/v1/tasks",data={ "list_id":listID })
