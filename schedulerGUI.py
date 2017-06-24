@@ -86,8 +86,6 @@ class GUI:
             for task in taskToSchedule:
                 print task
 
-            print "done"
-
             self.schedularHandler.schedule_day(cleanEvents, taskToSchedule, datetime.date.today()+datetime.timedelta(days=1), self.google.calendarID)
 
     def changeListID(self, event):
