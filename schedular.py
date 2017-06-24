@@ -1,4 +1,4 @@
-
+import datetime
 
 class schedular: 
 
@@ -46,6 +46,6 @@ class schedular:
         while i < len(googleEvents)-1 and len(tasksToSchedule) != 0:
             nextBlock = googleEvents[i+1].start - googleEvents[i].end
             if(nextBlock > datetime.timedelta(minutes=tasksToSchedule[0].length+tasksToSchedule[0].setUp*2)):
-                scheduleBlock(nextBlock, googleEvents[i].end, tasksToSchedule, calendarID)
+                self.scheduleBlock(nextBlock, googleEvents[i].end, tasksToSchedule, calendarID)
             i += 1
 

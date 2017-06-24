@@ -4,6 +4,7 @@ import datetime
 from utils import *
 from server import getWunderAccess
 import requests
+from unscheduledTask import unscheduledTask
 
 from utils import getInputFromList
 
@@ -71,7 +72,7 @@ class wunder:
     def select_list(self):
         listNames = []
 
-        listOfLists = getLists()
+        listOfLists = self.getLists()
 
         for list in listOfLists:
             listNames.append(list["title"])
@@ -93,10 +94,10 @@ class wunder:
                 self.listID = item["id"]
 
     def get_tasks(self, listID):
-        return request("GET","http://a.wunderlist.com/api/v1/tasks",data={ "list_id":listID })
+        return self.request("GET","http://a.wunderlist.com/api/v1/tasks",data={ "list_id":listID })
 
     def change_task_name(self, task, title):
-        request("PATCH", "https://a.wunderlist.com/api/v1/tasks/" + str(task["id"]),data={"revision":task["revision"], "title":title})
+        self.request("PATCH", "https://a.wunderlist.com/api/v1/tasks/" + str(task["id"]),data={"revision":task["revision"], "title":title})
 
     def parse_tasks(self, listOfTasks):
         tasksToSchedule = []
