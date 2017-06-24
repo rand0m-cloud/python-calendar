@@ -1,24 +1,21 @@
-
-import datetime
-
-from utils import *
-from server import getWunderAccess
 import requests
-from unscheduledTask import unscheduledTask
 
-from utils import getInputFromList
+from HelperFiles.utils import *
+from HelperFiles.utils import getInputFromList
+from WunderAPI.unscheduledTask import unscheduledTask
+
 
 class wunder:
 
     
 
     def genCreds(self):
-        if os.path.isfile("wunderaccess.json"):
-            os.remove("wunderaccess.json")
+        if os.path.isfile("WunderAPI\wunderaccess.json"):
+            os.remove("WunderAPI\wunderaccess.json")
 
         self.token = getWunderAccess(self.oauth)
 
-        with open("wunderaccess.json", "w") as wunderaccess:
+        with open("WunderAPI\wunderaccess.json", "w") as wunderaccess:
             obj = {
                 "access_token": self.token
             }
@@ -27,11 +24,11 @@ class wunder:
     def __init__(self):
         self.listID = ""
         self.lists = None
-        with open("wunderoauth.json", "r") as wunderoauth:
+        with open("WunderAPI\wunderoauth.json", "r") as wunderoauth:
             self.oauth = json.load(wunderoauth)
 
-        if os.path.isfile("wunderaccess.json"):
-            with open("wunderaccess.json") as wunderaccess:
+        if os.path.isfile("WunderAPI\wunderaccess.json"):
+            with open("WunderAPI\wunderaccess.json") as wunderaccess:
                 self.token = json.load(wunderaccess)["access_token"]
         else:
             self.genCreds()

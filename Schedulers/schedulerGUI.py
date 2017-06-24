@@ -1,10 +1,11 @@
-from googleEvent import googleEvent
-from unscheduledTask import *
+from GoogleAPI.googleEvent import googleEvent
+from WunderAPI.unscheduledTask import *
 from calendarManager import *
 from Tkinter import *
-from googleAPI import *
-from wunderAPI import *
+from GoogleAPI.googleAPI import *
+from WunderAPI.wunderAPI import *
 from schedular import *
+
 
 class GUI:
 
@@ -69,6 +70,7 @@ class GUI:
             if event["start"].has_key("dateTime") == False:
                 continue
             calEvent = googleEvent(event)
+
             cleanEvents.append(calEvent)
             print calEvent
 

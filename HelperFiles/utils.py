@@ -4,7 +4,7 @@ from oauth2client import client
 from oauth2client import tools
 from oauth2client.file import Storage
 from utils import *
-from server import *
+from WunderAPI.server import *
 import httplib2
 import os
 

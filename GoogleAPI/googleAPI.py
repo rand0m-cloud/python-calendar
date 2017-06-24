@@ -1,10 +1,6 @@
-import datetime
+from HelperFiles.utils import *
 
-from utils import *
-from server import getWunderAccess
-import requests
-
-from utils import getInputFromList
+from HelperFiles.utils import getInputFromList
 
 
 class google:
