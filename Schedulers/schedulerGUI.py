@@ -6,6 +6,7 @@ from GoogleAPI.googleAPI import *
 from WunderAPI.wunderAPI import *
 from schedular import *
 from PomodoroModule.freeTimeBlock import *
+from PomodoroModule.pomodoroScheduler import PomodoroScheduler
 
 class GUI:
 
@@ -64,42 +65,30 @@ class GUI:
         print "Filling Calendar..."
         events = self.google.get_events(self.google.calendarID)
 
-        cleanEvents = []  # exclude all day events
+        events = self.google.cleanEvents(events)
 
-        for event in events:
-            if event["start"].has_key("dateTime") == False:
-                continue
-            calEvent = googleEvent(event)
+        self.schedulerHandler = PomodoroScheduler(events)
 
-            cleanEvents.append(calEvent)
-            print calEvent
-
-        FreeTime = []
-
-        self.endTime = None
-        for event in cleanEvents:
-            self.startTime = event.start
-            if self.endTime is not None:
-                delta = self.startTime-self.endTime
-                if delta.days >= 0 and delta.seconds > 0:
-                    FreeTime.append(FreeTimeBlock(self.endTime, self.startTime))
-            self.endTime = event.end
-
-        self.schedularHandler = schedular()
-
-        listID = self.wunder.listID
-
-        listOfTasks = self.wunder.get_tasks(listID)
-
+        listOfTasks = self.wunder.get_tasks(self.wunder.listID)
         taskToSchedule = self.wunder.parse_tasks(listOfTasks)
+        self.schedulerHandler.scheduleTasks(taskToSchedule)
 
-        if taskToSchedule != []:
-            taskToSchedule = self.schedularHandler.order_tasks(taskToSchedule)
-
-            for task in taskToSchedule:
-                print task
-
-            self.schedularHandler.schedule_day(cleanEvents, taskToSchedule, datetime.date.today()+datetime.timedelta(days=1), self.google.calendarID)
+        # #Todo make this a polymorphic class so I can choose what scheduling algorithm at runtime
+        # self.schedularHandler = schedular()
+        #
+        # listID = self.wunder.listID
+        #
+        # listOfTasks = self.wunder.get_tasks(listID)
+        #
+        # taskToSchedule = self.wunder.parse_tasks(listOfTasks)
+        #
+        # if taskToSchedule != []:
+        #     taskToSchedule = self.schedularHandler.order_tasks(taskToSchedule)
+        #
+        #     for task in taskToSchedule:
+        #         print task
+        #
+        #     self.schedularHandler.schedule_day(events, taskToSchedule, datetime.date.today()+datetime.timedelta(days=1), self.google.calendarID)
 
     def changeListID(self, event):
         lb = event.widget

@@ -1,5 +1,5 @@
 from HelperFiles.utils import *
-
+from googleEvent import googleEvent
 from HelperFiles.utils import getInputFromList
 
 
@@ -27,6 +27,20 @@ class google:
         #FIXME add back in maxTime
         results = self.service.events().list(calendarId=calendar_id,timeMin=minTime, orderBy="startTime", singleEvents=True).execute()
         return results["items"]
+
+    def cleanEvents(self, events):
+
+        cleanEvents = []  # exclude all day events
+
+        for event in events:
+            if event["start"].has_key("dateTime") == False:
+                continue
+            calEvent = googleEvent(event)
+
+            cleanEvents.append(calEvent)
+
+        return cleanEvents
+
 
     def getCalendars(self):
         return self.service.calendarList().list().execute()

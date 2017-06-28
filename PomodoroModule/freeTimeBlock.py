@@ -5,6 +5,8 @@ from pomodoro import Pomodoro
 class FreeTimeBlock:
 
     def __init__(self, startTime, endTime):
+        self.startTime = startTime
+        self.endTime = endTime
         timeDelta = endTime - startTime
 
         if(timeDelta.days >= 0):
@@ -27,12 +29,46 @@ class FreeTimeBlock:
 
         self.OpenSpots = self.hunks.__len__()*4 + self.ExtraBlocks.__len__()
         self.OpenHunks = self.hunks.__len__()
+        self.OpenExtras = self.ExtraBlocks.__len__()
 
     def scheduleHunk(self, tasksToSchedule):
         pass
 
-    def scheduleTask(self, task):
-        pass
+    def partialScheduleHunk(self, task):
+        print "breaking hunk"
+        for hunk in self.hunks:
+            if hunk.partial and not hunk.filled:
+                hunk.scheduleTask(task)
+                return True
+        for hunk in self.hunks:
+            if not hunk.filled:
+                hunk.scheduleTask(task)
+                return True
+        return False
 
+
+    def scheduleExtra(self, task):
+        scheduled = False
+        for pomo in self.ExtraBlocks:
+            if not pomo.filled:
+                pomo.addTask(task)
+                scheduled = True
+                self.OpenExtras -= 1
+                return True
+        return scheduled
+
+    def scheduleTask(self, task):
+
+        print self.startTime
+        if self.OpenExtras > 0:
+            if self.scheduleExtra(task):
+                self.OpenSpots -= 1
+                return True
+        if self.partialScheduleHunk(task):
+            self.OpenSpots -= 1
+            return True
+        return False
+
+    #push everthing to Google
     def finalizeBlock(self):
         pass
