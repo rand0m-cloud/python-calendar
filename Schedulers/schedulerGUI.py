@@ -5,7 +5,7 @@ from Tkinter import *
 from GoogleAPI.googleAPI import *
 from WunderAPI.wunderAPI import *
 from schedular import *
-
+from PomodoroModule.freeTimeBlock import *
 
 class GUI:
 
@@ -73,6 +73,17 @@ class GUI:
 
             cleanEvents.append(calEvent)
             print calEvent
+
+        FreeTime = []
+
+        self.endTime = None
+        for event in cleanEvents:
+            self.startTime = event.start
+            if self.endTime is not None:
+                delta = self.startTime-self.endTime
+                if delta.days >= 0 and delta.seconds > 0:
+                    FreeTime.append(FreeTimeBlock(self.endTime, self.startTime))
+            self.endTime = event.end
 
         self.schedularHandler = schedular()
 
