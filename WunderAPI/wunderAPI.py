@@ -90,29 +90,44 @@ class wunder:
                 print item["id"]
                 self.listID = item["id"]
 
-    def get_tasks(self, listID):
-        return self.request("GET","http://a.wunderlist.com/api/v1/tasks",data={ "list_id":listID })
+    def get_tasks(self, listID, numberOfTasks):
+        originaltasks =  self.request("GET","http://a.wunderlist.com/api/v1/tasks",data={ "list_id":listID })
+        tasks = self.parse_tasks(originaltasks)
+        tasksToGive = []
+        i=0
+        j=0
+        while i<=numberOfTasks and j<len(tasks):
+            i+=tasks[j].length
+            if i<=numberOfTasks:
+                tasksToGive.append(tasks[j])
+                self.change_task_name(originaltasks[j], tasks[j].title)
+            if i > numberOfTasks:
+                i-=tasks[j].length
+            j += 1
+        return tasksToGive
 
     def change_task_name(self, task, title):
-        self.request("PATCH", "https://a.wunderlist.com/api/v1/tasks/" + str(task["id"]),data={"revision":task["revision"], "title":title})
+        self.request("PATCH", "https://a.wunderlist.com/api/v1/tasks/" + str(task["id"]),data={"revision":task["revision"], "title":title+" #scheduled"})
 
     def parse_tasks(self, listOfTasks):
         tasksToSchedule = []
         for task in listOfTasks:
-
+            length = 0
             print task
             title = task["title"].split('#')
             if len(title) == 1:
-                continue
-           # change_task_name(task, title[0])
+                length = 1
+            # change_task_name(task, title[0])
             # number - length, s-number of segements, r-repeat frequency, p-preparation time
-            length = 0
+
             fun = 0
             repeatsFreq = 0 #TODO Add me
             segments = 1
-            prep = 0
+            prep = 5
             for bit in title:
                 bit = bit.strip()
+                if bit.startswith("#scheduled"):
+                    continue
                 if bit.isdigit():
                     length = int(bit)
                 if bit.startswith("s"):

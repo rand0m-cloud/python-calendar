@@ -9,10 +9,10 @@ class unscheduledTask:
         self.setUp = setUp
         self.weight = fun*length
 
-    def createGoogleEvent(self, date, time, calendarID):
+    def createGoogleEvent(self, date, time, length, google):
         startTime = datetime.datetime.combine(date, time)
         startTimeString = startTime.strftime("%Y-%m-%dT%H:%M:%S-04:00") #FIXME Actually set the correct timezone with daylight savings
-        endTime = startTime+datetime.timedelta(minutes=self.length)
+        endTime = startTime+datetime.timedelta(minutes=length)
 
         endTimeString = endTime.strftime("%Y-%m-%dT%H:%M:%S-04:00")
         event = {
@@ -33,8 +33,8 @@ class unscheduledTask:
                 ],
             },
         }
-
-        return event
+        print event
+        google.service.events().insert(calendarId="primary", body=event).execute()
 
     def __str__(self):
         return "Name: {}, Length: {}".format(self.title, self.length)

@@ -23,3 +23,6 @@ class Hunk:
                 return True
         self.filled = True
         return False
+
+    def getTasks(self):
+        return self.tasks

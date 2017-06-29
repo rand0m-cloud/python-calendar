@@ -57,7 +57,13 @@ class FreeTimeBlock:
                 return True
         return scheduled
 
-    def scheduleTask(self, task):
+    def scheduleTask(self, task, length):
+        print "Scheduling"
+        for i in range(length):
+            self.scheduleSingleTask(task)
+        return True
+
+    def scheduleSingleTask(self, task):
 
         print self.startTime
         if self.OpenExtras > 0:
@@ -68,7 +74,24 @@ class FreeTimeBlock:
             self.OpenSpots -= 1
             return True
         return False
-
     #push everthing to Google
-    def finalizeBlock(self):
-        pass
+    def finalizeBlock(self, google):
+        for hunk in self.hunks:
+            if hunk.filled:
+                self.finalizeHunk(hunk,google)
+            else:
+                for i in range(hunk.scheduled):
+                    self.finalizeTask(hunk.getTasks()[i],google)
+        for pomo in self.ExtraBlocks:
+            self.finalizeTask(pomo, google)
+    def finalizeHunk(self, hunk, google):
+        for task in hunk.getTasks():
+            self.finalizeTask(task, google)
+        self.startTime += datetime.timedelta(minutes=30)
+
+    def finalizeTask(self, task, google):
+        if task.filled:
+            task.task.createGoogleEvent(self.startTime.date(), self.startTime.time(), 25, google)
+            self.startTime += datetime.timedelta(minutes=30)
+    def __str__(self):
+        return str(self.startTime) + " : " + str(self.endTime) + " : " + str(self.OpenSpots)

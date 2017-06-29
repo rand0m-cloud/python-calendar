@@ -1,3 +1,5 @@
+import pytz as pytz
+
 from GoogleAPI.googleEvent import googleEvent
 from WunderAPI.unscheduledTask import *
 from calendarManager import *
@@ -66,12 +68,16 @@ class GUI:
         events = self.google.get_events(self.google.calendarID)
 
         events = self.google.cleanEvents(events)
+        #TODO add date selection
+        startTime = datetime.datetime.today().replace(hour=9, minute=0, second=0, microsecond=0, tzinfo= Zone(-4,False,'EST')) + \
+                    datetime.timedelta(days=2)
+        endTime = datetime.datetime.today().replace(hour=17, minute=0, second=0, microsecond=0, tzinfo=Zone(-4,False,'EST')) + \
+                  datetime.timedelta(days=2)
 
-        self.schedulerHandler = PomodoroScheduler(events)
+        self.schedulerHandler = PomodoroScheduler(events, startTime, endTime)
 
-        listOfTasks = self.wunder.get_tasks(self.wunder.listID)
-        taskToSchedule = self.wunder.parse_tasks(listOfTasks)
-        self.schedulerHandler.scheduleTasks(taskToSchedule)
+        taskToSchedule = self.wunder.get_tasks(self.wunder.listID, self.schedulerHandler.maxTasks)
+        self.schedulerHandler.scheduleTasks(taskToSchedule, self.google)
 
         # #Todo make this a polymorphic class so I can choose what scheduling algorithm at runtime
         # self.schedularHandler = schedular()
@@ -103,3 +109,15 @@ class GUI:
         value = lb.get(index)
         print value
         self.google.setCalendarID(value)
+
+class Zone(datetime.tzinfo):
+    def __init__(self,offset,isdst,name):
+        self.offset = offset
+        self.isdst = isdst
+        self.name = name
+    def utcoffset(self, dt):
+        return datetime.timedelta(hours=self.offset) + self.dst(dt)
+    def dst(self, dt):
+            return datetime.timedelta(hours=1) if self.isdst else datetime.timedelta(0)
+    def tzname(self,dt):
+         return self.name

@@ -4,6 +4,6 @@ class Pomodoro:
         self.filled = False
 
     def addTask(self, task):
-        print "adding"
-        print task
+        self.task = task
         self.filled = True
+
